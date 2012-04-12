@@ -32,6 +32,13 @@ target['check-lint'] = function() {
   exec(JSLINT + ' ' + files);
 };
 
+target.css = function() {
+  mkdir('-p', 'dist');
+  rm('-rf', 'dist/*.css');
+  exec(STYLUS + ' css');
+  cp('css/*.css', 'dist');
+};
+
 target.build = function() {
   echo('### Building butter');
 
@@ -41,8 +48,7 @@ target.build = function() {
   exec(RJS + ' -o tools/build.js');
   exec(RJS + ' -o tools/build.optimized.js');
 
-  exec(STYLUS + ' css');
-  cp('css/*.css', 'dist');
+  target.css();
 };
 
 target.server = function() {
