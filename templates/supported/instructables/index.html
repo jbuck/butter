@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Instructables</title>
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <style>
+      .outercontainer {
+        margin: 0 auto;
+        padding-top: 1em;
+        width: 1300px;
+      }
+
+      #right {
+        padding-left: 2em;
+      }
+    </style>
+
+    <script src="../../../src/butter.js" data-butter-exclude></script>
+    <script data-butter-exclude>
+      document.addEventListener( "DOMContentLoaded", function(){
+        Butter({
+          config: "config.json"
+        }); //Butter
+      }, false);
+</script>
+  </head>
+  <body>
+    <div class="outercontainer">
+      <div class="row">
+        <div class="span8">
+          <div id="video" data-butter="media" data-butter-media-controls></div>
+        </div>
+        <div class="span8" data-butter="target" id="right">
+
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
