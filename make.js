@@ -306,7 +306,11 @@ target['check-tests'] = function( dir ) {
 };
 
 // If compress is true, crush CSS down, otherwise leave expanded.
-function lessToCSS( compress ){
+function lessToCSS( options ){
+  var compress = options.compress || false,
+      lessFile = options.lessFile || BUTTER_LESS_FILE,
+      cssFile = options.cssFile || BUTTER_CSS_FILE;
+
   echo( "### Building CSS using LESS (" +
         ( compress ? "with" : "without" ) +
         " compression)" );
@@ -356,7 +360,7 @@ target.embed = function(){
 
 target.css = function() {
   // Leave CSS expanded if building in tree (for debugging)
-  lessToCSS( false );
+  lessToCSS({ compress: false });
 };
 
 function build( version ){
@@ -371,7 +375,7 @@ function build( version ){
   stampVersion( version, 'dist/butter.min.js' );
 
   // Compress CSS for deployment
-  lessToCSS( true );
+  lessToCSS({ compress: true });
 
   cp( "-f", BUTTER_CSS_FILE, DIST_DIR );
 }
@@ -517,46 +521,53 @@ target.test = function() {
   }
 };
 
-target.storycamp = function(){
+target.butyr = function(){
   echo('### Making single file version of Butter + Popcorn (use UNMINIFIED=1 for unminified)');
 
   // To get unminified butter.js, use the UNMINIFIED env variable:
   // $ UNMINIFIED=1 node make storycamp
   var unminified = env['UNMINIFIED'] === "1";
 
-  build( 'storycamp' );
+  build( 'butyr' );
+  // Build the embed CSS file (#1919 will fix to use proper build)
+  lessToCSS({
+    lessFile: "css/embed.less",
+    cssFile: "css/embed.css",
+    compress: !unminified
+  });
   target['buttered-popcorn']();
 
-  var storyCamp = 'butter.js',
-      storyCampMin = 'butter.min.js';
+  var butter = 'butter.js',
+      butterMin = 'butter.min.js';
 
   function makeButterJS( keepMe, deleteMe ){
     echo( '### Cleaning temp files' );
     cd( DIST_DIR );
     rm( '-f', deleteMe );
 
-    // Mirror layout in butter/ so templates are happy, renaming to src/butter.js
-    mkdir( 'src' );
-    mv( keepMe, './src/butter.js' );
+    // Mirror layout in butter/ so templates, embed are happy, renaming to src/butter.js
+    mv( '-f', keepMe, './src/butter.js' );
   }
 
   var cwd = pwd();
 
+  // Copy the src dir over so we have proper embed files presnet (#1919 will fix this)
+  mkdir('-p', './dist/src');
+  cp('-R', 'src', DIST_DIR);
+
   // Depending on whether we want minified source, keep one, delete one.
   if( unminified ){
-    makeButterJS( storyCamp, storyCampMin );
+    makeButterJS( butter, butterMin );
   } else {
     // Write out dist/storycamp-butter.min.js
-    exec( UGLIFY + ' --output ' + DIST_DIR + '/' + storyCampMin + ' ' + DIST_DIR + '/' + storyCamp );
-    makeButterJS( storyCampMin, storyCamp );
+    exec( UGLIFY + ' --output ' + DIST_DIR + '/' + butterMin + ' ' + DIST_DIR + '/' + butter );
+    makeButterJS( butterMin, butter );
   }
-
-  // Move css files into dist/css
-  mkdir('css');
-  mv('*.css', './css');
 
   // Copy other assets over
   cd(cwd);
+  mkdir( join( DIST_DIR, 'css' ) );
+  cp('css/*.css', join( DIST_DIR, 'css' ) );
   cp('-R', 'editors', DIST_DIR);
   cp('-R', 'resources', DIST_DIR);
   cp('-R', 'templates', DIST_DIR);
