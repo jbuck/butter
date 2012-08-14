@@ -527,8 +527,8 @@ target.test = function() {
   }
 };
 
-target.butyr = function(){
-  echo('### Making single file version of Butter + Popcorn (use UNMINIFIED=1 for unminified)');
+target.deploy = function(){
+  echo('### Making deployable versions of butter, embed, popcorn, etc. (use UNMINIFIED=1 for unminified)');
 
   // To get unminified butter.js, use the UNMINIFIED env variable:
   // $ UNMINIFIED=1 node make storycamp
