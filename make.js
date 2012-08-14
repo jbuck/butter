@@ -541,6 +541,9 @@ target.deploy = function(){
   var unminified = env['UNMINIFIED'] === "1",
       version = env['VERSION'];
 
+  target.clean();
+  target.dist();
+
   embed( version, !unminified );
   build( 'deploy', !unminified );
   target['buttered-popcorn']();

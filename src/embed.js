@@ -130,7 +130,7 @@ function init( window, document ) {
     }
   }
 
-  var req = requirejs.config({
+  var require = requirejs.config({
     context: "embed",
     baseUrl: "/src",
     paths: {
@@ -138,7 +138,7 @@ function init( window, document ) {
     }
   });
 
-  req([
+  require([
       "util/uri",
       "ui/widget/controls",
       "ui/widget/textbox",
@@ -226,7 +226,7 @@ function init( window, document ) {
 }
 
 // Source tree case vs. require-built case.
-if( !window.requirejs ) {
+if ( typeof require === "undefined" ) {
   Popcorn.getScript( "../../external/require/require.js", function() {
     init( window, window.document );
  });
