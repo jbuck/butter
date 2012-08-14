@@ -308,10 +308,10 @@ target['check-tests'] = function( dir ) {
 // If compress is true, crush CSS down, otherwise leave expanded.
 function lessToCSS( options ){
   var compress = options.compress || false,
-      lessFile = options.lessFile || BUTTER_LESS_FILE,
-      cssFile = options.cssFile || BUTTER_CSS_FILE;
+      lessFile = options.lessFile,
+      cssFile = options.cssFile;
 
-  echo( "### Building CSS using LESS (" +
+  echo( "### Building CSS using LESS for " + lessFile + " (" +
         ( compress ? "with" : "without" ) +
         " compression)" );
 
@@ -360,7 +360,11 @@ target.embed = function(){
 
 target.css = function() {
   // Leave CSS expanded if building in tree (for debugging)
-  lessToCSS({ compress: false });
+  lessToCSS({
+    lessFile: BUTTER_LESS_FILE,
+    cssFile: BUTTER_CSS_FILE,
+    compress: false
+  });
 };
 
 function build( version ){
@@ -375,9 +379,11 @@ function build( version ){
   stampVersion( version, 'dist/butter.min.js' );
 
   // Compress CSS for deployment
-  lessToCSS({ compress: true });
-
-  cp( "-f", BUTTER_CSS_FILE, DIST_DIR );
+  lessToCSS({
+    lessFile: BUTTER_LESS_FILE,
+    cssFile: BUTTER_CSS_FILE,
+    compress: true
+  });
 }
 
 target.build = function(){
@@ -528,6 +534,8 @@ target.butyr = function(){
   // $ UNMINIFIED=1 node make storycamp
   var unminified = env['UNMINIFIED'] === "1";
 
+  target.embed();
+
   build( 'butyr' );
   // Build the embed CSS file (#1919 will fix to use proper build)
   lessToCSS({
@@ -537,35 +545,28 @@ target.butyr = function(){
   });
   target['buttered-popcorn']();
 
-  var butter = 'butter.js',
-      butterMin = 'butter.min.js';
-
-  function makeButterJS( keepMe, deleteMe ){
-    echo( '### Cleaning temp files' );
-    cd( DIST_DIR );
-    rm( '-f', deleteMe );
-
-    // Mirror layout in butter/ so templates, embed are happy, renaming to src/butter.js
-    mv( '-f', keepMe, './src/butter.js' );
+  function mirrorInSrc( filenameSuffix, minified ) {
+    var keep = minified ? ".min.js" : ".js",
+        remove = !minified ? ".min.js" : ".js";
+    mv( '-f', join( DIST_DIR, filenameSuffix + keep ), join( DIST_DIR, './src/' + filenameSuffix + '.js' ) );
+    rm( '-f', join( DIST_DIR, filenameSuffix + remove ) );
   }
 
-  var cwd = pwd();
-
-  // Copy the src dir over so we have proper embed files presnet (#1919 will fix this)
+  // We'll mirror src/butter.js and src/embed.js to mimic exploded install
   mkdir('-p', './dist/src');
-  cp('-R', 'src', DIST_DIR);
 
   // Depending on whether we want minified source, keep one, delete one.
   if( unminified ){
-    makeButterJS( butter, butterMin );
+    mirrorInSrc( "butter", false );
+    mirrorInSrc( "embed", false);
   } else {
     // Write out dist/storycamp-butter.min.js
-    exec( UGLIFY + ' --output ' + DIST_DIR + '/' + butterMin + ' ' + DIST_DIR + '/' + butter );
-    makeButterJS( butterMin, butter );
+    exec( UGLIFY + ' --output ' + DIST_DIR + '/butter.min.js ' + DIST_DIR + '/' + 'butter.js' );
+    mirrorInSrc( "butter", true );
+    mirrorInSrc( "embed", true );
   }
 
   // Copy other assets over
-  cd(cwd);
   mkdir( join( DIST_DIR, 'css' ) );
   cp('css/*.css', join( DIST_DIR, 'css' ) );
   cp('-R', 'editors', DIST_DIR);
