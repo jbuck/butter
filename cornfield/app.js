@@ -110,7 +110,6 @@ app.configure( 'development', function() {
 require('express-browserid').plugAll(app);
 
 function writeEmbedShell( path, res, url, data, callback ) {
-console.log(path, url, data);
   if( !writeEmbedShell.templateFn ) {
     writeEmbedShell.templateFn = jade.compile( fs.readFileSync( 'views/embed-shell.jade', 'utf8' ),
                                           { filename: 'embed-shell.jade', pretty: true } );
@@ -130,7 +129,6 @@ console.log(path, url, data);
 }
 
 function writeEmbed( path, res, url, data, callback ) {
-console.log(path, url, data);
   if( !writeEmbed.templateFn ) {
     writeEmbed.templateFn = jade.compile( fs.readFileSync( 'views/embed.jade', 'utf8' ),
                                           { filename: 'embed.jade', pretty: true } );
@@ -298,7 +296,7 @@ app.post( '/api/publish/:id', filter.isLoggedIn, filter.isStorageAvailable, func
                          res, PUBLISH_PREFIX_V + "/" + id + ".html",
                          {
                            author: email,
-                           projectName: "todo",
+                           projectName: project.name,
                            embedSrc: PUBLISH_PREFIX_E + "/" + id + ".html"
                          });
       }
@@ -308,7 +306,7 @@ app.post( '/api/publish/:id', filter.isLoggedIn, filter.isStorageAvailable, func
                   {
                     id: id,
                     author: email,
-                    title: "todo",
+                    title: project.name,
                     baseHref: baseHref,
                     templateScripts: templateScripts,
                     externalAssets: externalAssetsString,
