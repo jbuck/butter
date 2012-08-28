@@ -1,4 +1,4 @@
-/*globals cat,cd,cp,env,exec,echo,find,ls,mkdir,mv,pwd,rm,sed,target*/
+/*globals cat,cd,cp,env,exec,exit,echo,find,ls,mkdir,mv,pwd,rm,sed,target*/
 
 var path = require( "path" ),
     spawn = require('child_process').spawn,
@@ -59,6 +59,8 @@ function checkCSSFile( filename, warnings, errors ) {
     }
   }
 
+  var passed = true;
+
   // Run CSSLint across the file, check for errors/warnings and ignore if
   // they are ones we know about from above.
   exec(CSSLINT +
@@ -66,7 +68,7 @@ function checkCSSFile( filename, warnings, errors ) {
     ' --errors=' + errors +
     ' --quiet --format=compact' +
     ' ' + filename, { silent: true } ).output.split( /\r?\n/ )
-    .forEach( function( line ) {
+    .filter( function( line ) {
       if( !line ) {
         return;
       }
@@ -78,12 +80,17 @@ function checkCSSFile( filename, warnings, errors ) {
 
       if( !!lineNumber ) {
         if( ignoreLines.indexOf( "|" + lineNumber + "|" ) === -1 ) {
-          echo( line );
+          return true;
         }
       } else {
-        echo( line );
+        return true;
       }
+  }).forEach( function( line ) {
+    passed = false;
+    echo( line );
   });
+
+  return passed;
 }
 
 function checkCSS( dir ) {
@@ -120,15 +127,15 @@ function checkCSS( dir ) {
     "vendor-prefix"
   ].join(",");
 
-
+  var passed = true;
   var files = ls( dir );
   files.forEach( function( filename ) {
     filename = join( dir, filename );
     if( /\.css$/.test( filename ) ) {
-      checkCSSFile( filename, warnings, errors );
+      passed = checkCSSFile( filename, warnings, errors ) && passed;
     }
   });
-
+  return passed;
 }
 
 function checkJS(){
@@ -146,7 +153,7 @@ function checkJS(){
   });
 
   // jshint with non-errors plus linting of json files
-  exec(JSLINT + ' ' + files + ' --show-non-errors --extra-ext json');
+  return !exec(JSLINT + ' ' + files + ' --show-non-errors --extra-ext json').code;
 }
 
 var desc = {
@@ -213,8 +220,10 @@ function checkHTMLFile( filename, ignoreList ) {
 
     if ( printFooter ) {
       echo( "\n" );
+      return false;
     }
   }
+  return true;
 }
 
 function checkHTML() {
@@ -253,6 +262,8 @@ function checkHTML() {
     }
   ];
 
+  var passed = true;
+
   find([
     EDITORS_DIR,
     join( SRC_DIR, "layouts" ),
@@ -260,8 +271,10 @@ function checkHTML() {
     TEMPLATES_DIR ] ).filter( function( file ) {
     return file.match( /\.html$/ );
   }).forEach( function( filename ) {
-    checkHTMLFile( filename, ignoreList );
+    passed = checkHTMLFile( filename, ignoreList ) && passed;
   });
+
+  return passed;
 }
 
 function lessToCSS( options ){
@@ -282,39 +295,53 @@ function lessToCSS( options ){
   } else {
     echo( result.output );
   }
+
+  return !result.code;
 }
 
 function buildCSS(compress) {
-  lessToCSS({
+  var passed = true;
+
+  passed = lessToCSS({
     lessFile: BUTTER_LESS_FILE,
     cssFile: BUTTER_CSS_FILE,
     compress: compress
-  });
+  }) && passed;
 
-  lessToCSS({
+  passed = lessToCSS({
     lessFile: BUTTER_TRANSITIONS_LESS_FILE,
     cssFile: BUTTER_TRANSITIONS_CSS_FILE,
     compress: compress
-  });
+  }) && passed;
 
-  lessToCSS({
+  passed = lessToCSS({
     lessFile: "css/embed.less",
     cssFile: "css/embed.css",
     compress: compress
-  });
+  }) && passed;
 
-  lessToCSS({
+  passed = lessToCSS({
     lessFile: "css/embed-shell.less",
     cssFile: "css/embed-shell.css",
     compress: compress
-  });
+  }) && passed;
+
+  return passed;
 }
 
 target.check = function() {
-  checkJS( 'make.js', SRC_DIR, EDITORS_DIR, CORNFIELD_DIR, TEMPLATES_DIR );
-  buildCSS();
-  checkCSS( CSS_DIR, TEMPLATES_DIR );
-  checkHTML();
+  var passed = true;
+
+  passed = checkJS( 'make.js', SRC_DIR, EDITORS_DIR, CORNFIELD_DIR, TEMPLATES_DIR ) && passed;
+  passed = buildCSS() && passed;
+  passed = checkCSS( CSS_DIR, TEMPLATES_DIR ) && passed;
+  passed = checkHTML() && passed;
+
+  if ( passed ) {
+    exit( 0 );
+  } else {
+    exit( 1 );
+  }
 };
 
 function stampVersion( version, filename ){
