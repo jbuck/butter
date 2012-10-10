@@ -20,7 +20,7 @@ var express = require('express'),
     PUBLISH_PREFIX_V = CONFIG.dirs.hostname + "/v",
     PUBLISH_PREFIX_E = CONFIG.dirs.hostname + "/e",
     REPORTS_DIR = path.join( PUBLISH_DIR, "crash" ),
-    WWW_ROOT = path.resolve( CONFIG.dirs.wwwRoot );
+    WWW_ROOT = path.resolve( CONFIG.dirs.wwwRoot ),
     VALID_TEMPLATES = CONFIG.templates,
     EXPORT_ASSETS = CONFIG.exportAssets;
 

@@ -1,5 +1,5 @@
 function generateMockData(id) {
-  id = id || (Math.random()*1000000000).toFixed(0);
+  id = id || parseInt( Math.random()*10000, 10 );
 
   return {
     id: id,
@@ -64,7 +64,7 @@ module.exports = function() {
         return;
       }
 
-      data.id = (Math.random()*1000000000).toFixed(0);
+      data.id = parseInt( Math.random()*10000, 10 );
       data.data = JSON.stringify( data.data );
 
       callback(null, data);

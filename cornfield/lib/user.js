@@ -6,21 +6,17 @@ module.exports = function( config, dbReadyFn ) {
   var dbOnline = false,
       Sequelize = require( "sequelize" ),
       sequelize = new Sequelize( config.database, config.username, config.password, config.options ),
-      Project = sequelize.import(__dirname + "/models/project");
+      Project = sequelize.import( __dirname + "/models/project" );
 
-  sequelize.sync()
-    .on( "success", function() {
+  sequelize.sync().complete(function( err ) {
+    if ( !err) {
       dbOnline = true;
+    }
 
-      if ( dbReadyFn ) {
-        dbReadyFn();
-      }
-    })
-    .on( "failure", function( err ) {
-      if ( dbReadyFn ) {
-        dbReadyFn( err );
-      }
-    });
+    if ( dbReadyFn ) {
+      dbReadyFn( err );
+    }
+  });
 
   return {
     createProject: function( email, data, callback ) {
@@ -37,12 +33,8 @@ module.exports = function( config, dbReadyFn ) {
         template: data.template
       });
 
-      project.save()
-      .success(function() {
-        callback( null, project );
-      })
-      .error(function( err ) {
-        callback( err );
+      project.save().complete(function( err, result ) {
+        callback( err, result );
       });
     },
     deleteProject: function( email, pid, callback ) {
@@ -53,8 +45,8 @@ module.exports = function( config, dbReadyFn ) {
 
       Project.find( { where: { email: email, id: pid } } )
       .success(function( project ) {
-        project.destroy().success( function( success ) {
-          callback();
+        project.destroy().complete( function( err ) {
+          callback( err );
         });
       })
       .error(function( error ) {
@@ -68,12 +60,8 @@ module.exports = function( config, dbReadyFn ) {
         return;
       }
 
-      Project.findAll( { where: { email: email } } )
-      .success(function( projects ) {
-        callback( null, projects );
-      })
-      .error(function( err ) {
-        callback( err );
+      Project.findAll( { where: { email: email } } ).complete( function( err, projects ) {
+        callback( err, projects );
       });
 
     },
@@ -83,12 +71,8 @@ module.exports = function( config, dbReadyFn ) {
         return;
       }
 
-      Project.find( { where: { email: email, id: pid } } )
-      .success(function( project ) {
-        callback( null, project );
-      })
-      .error(function( error ) {
-        callback( error );
+      Project.find( { where: { email: email, id: pid } } ).complete( function( err, project ) {
+        callback( err, project );
       });
 
     },
@@ -98,12 +82,8 @@ module.exports = function( config, dbReadyFn ) {
         return;
       }
 
-      Project.find({ where: { id: pid } } )
-      .success(function( project ) {
-        callback( null, project );
-      })
-      .error(function( error ) {
-        callback( error );
+      Project.find({ where: { id: pid } } ).complete( function( err, project ) {
+        callback( err, project );
       });
 
     },
@@ -125,8 +105,8 @@ module.exports = function( config, dbReadyFn ) {
           author: data.author || "",
           template: data.template
         })
-        .success(function() {
-          callback( null, project );
+        .complete( function(err, result) {
+          callback( err, result );
         });
       })
       .error(function( error ) {
@@ -134,4 +114,4 @@ module.exports = function( config, dbReadyFn ) {
       });
     }
   };
-}
+};
