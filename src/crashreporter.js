@@ -120,7 +120,9 @@ define( [ "dialog/dialog", "util/xhr", "util/uri" ], function( Dialog, XHR, URI 
                           ],
                           _nullDomList );
 
-      window.onerror = function( message, url, lineno ) {
+      window.onerror = Raven.process;
+
+      function old( message, url, lineno ) {
         if ( !window.XMLHttpRequest ) {
           return _onerror();
         }
