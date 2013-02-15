@@ -1,7 +1,7 @@
 function init( window, document ) {
   var require = requirejs.config({
-    context: "webmakernav",
     baseUrl: "/src",
+    deps: [ "util/shims" ],
     paths: {
       text: "../external/require/text"
     }

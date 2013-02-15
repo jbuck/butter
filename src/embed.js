@@ -242,8 +242,8 @@ function init( window, document ) {
   }
 
   var require = requirejs.config({
-    context: "embed",
     baseUrl: "/src",
+    deps: [ "util/shims" ],
     paths: {
       text: "../external/require/text"
     }
