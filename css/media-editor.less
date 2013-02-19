@@ -49,10 +49,15 @@
     }
   }
 
+  .record-webcam {
+    .hidden {
+      display: none;
+    }
+  }
+
   &.add-media-collapsed {
     .add-media-panel {
       margin: 0;
-      height: 0;
       opacity: 0;
     }
     .media-gallery {
@@ -61,7 +66,6 @@
   }
 
   .add-media-panel {
-    height: @addClipHeight;
     .transition( all 0.2s ease );
     overflow: hidden;
     opacity: 1;
@@ -69,9 +73,6 @@
   }
 
   .media-gallery {
-    position: absolute;
-    bottom: 0;
-    top: @addClipHeight + 20px;
     width: 100%;
     margin-top: -1px;
   }
@@ -86,8 +87,6 @@
     font-weight: 700;
     text-transform: uppercase;
 
-    position: absolute;
-    top: 0;
     left: 0;
     right: 0;
   }
@@ -118,8 +117,6 @@
   }
 
   .media-gallery-scroll-container {
-    position: absolute;
-    top: 45px;
     left: 0;
     right: 0;
     bottom: 0;

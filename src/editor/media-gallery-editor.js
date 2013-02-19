@@ -1,13 +1,16 @@
 /* This Source Code Form is subject to the terms of the MIT license
  * If a copy of the MIT license was not distributed with this file, you can
  * obtain one at https://raw.github.com/mozilla/butter/master/LICENSE */
+/*global YT */
 
 define( [ "util/lang", "util/xhr", "util/keys", "util/mediatypes", "editor/editor", "util/time", "util/dragndrop", "text!layouts/media-editor.html" ],
   function( LangUtils, XHR, KeysUtils, MediaUtils, Editor, Time, DragNDrop, EDITOR_LAYOUT ) {
 
-  var _parentElement =  LangUtils.domFragment( EDITOR_LAYOUT,".media-editor" ),
+  var _parentElement = LangUtils.domFragment( EDITOR_LAYOUT, ".media-editor" ),
       _addMediaTitle = _parentElement.querySelector( ".add-new-media" ),
       _addMediaPanel = _parentElement.querySelector( ".add-media-panel" ),
+
+      _recordWebcam = _parentElement.querySelector( ".record-webcam a" ),
 
       _urlInput = _addMediaPanel.querySelector( ".add-media-input" ),
       _addBtn = _addMediaPanel.querySelector( ".add-media-btn" ),
@@ -140,10 +143,10 @@ define( [ "util/lang", "util/xhr", "util/keys", "util/mediatypes", "editor/edito
     resetInput();
   }
 
-  function addMediaToGallery() {
+  function addMediaToGallery(e, url) {
     var data = {};
 
-    data.source = _urlInput.value;
+    data.source = url || _urlInput.value;
     data.type = "sequencer";
 
     _loadingSpinner.classList.remove( "hidden" );
@@ -194,6 +197,48 @@ define( [ "util/lang", "util/xhr", "util/keys", "util/mediatypes", "editor/edito
       setBaseDuration( _durationInput.value );
     }
   }
+
+  var loadYouTubeRecorder = function() {
+    var widget = new YT.UploadWidget( "youtube-upload", {
+      width: 295,
+      height: 295,
+      events: {
+        "onApiReady": function() {
+          widget.setVideoKeywords([ "webcam", "video", "popcorn" ]);
+          widget.setVideoPrivacy( "unlisted" );
+        },
+        "onUploadSuccess": function() {
+          _parentElement.querySelector( ".record-webcam p" ).classList.remove( "hidden" );
+        },
+        "onProcessingComplete": function( event ) {
+          widget.destroy();
+          widget = null;
+
+          _recordWebcam.classList.remove( "hidden" );
+          _parentElement.querySelector( ".record-webcam p" ).classList.add( "hidden" );
+
+          addMediaToGallery(null, "http://www.youtube.com/watch?v=" + event.data.videoId);
+        }
+      }
+    });
+  };
+
+  _recordWebcam.addEventListener( "click", function() {
+    _recordWebcam.classList.add( "hidden" );
+
+    if ( window.YT ) {
+      loadYouTubeRecorder();
+    } else {
+      var tag = document.createElement('script');
+      tag.src = "//www.youtube.com/iframe_api";
+      document.head.appendChild( tag );
+
+      window.onYouTubeIframeAPIReady = function() {
+        loadYouTubeRecorder();
+        delete window.onYouTubeIframeAPIReady;
+      };
+    }
+  }, false );
 
   Editor.register( "media-editor", null, function( rootElement, butter ) {
     rootElement = _parentElement;
