@@ -5,11 +5,13 @@
 
 define( [
           "core/logger", "core/eventmanager", "util/uri",
-          "util/warn", "../../external/PluginDetect/PluginDetect_Flash"
+          "util/warn", "../../external/PluginDetect/PluginDetect_Flash",
+          "core/metrics"
         ],
         function(
           Logger, EventManager, URI,
-          Warn, PluginDetect
+          Warn, PluginDetect,
+          metrics
         ){
 
   // regex to determine the type of player we need to use based on the provided url
@@ -87,12 +89,13 @@ define( [
           popcornId = trackEvent.id,
           popcornEvent = null;
 
-      function createTrackEvent() {
+      function synchronizeTrackEvent() {
 
         if ( _popcorn.getTrackEvent( popcornId ) ) {
           _popcorn[ trackEvent.type ]( popcornId, newOptions );
         } else {
           _popcorn[ trackEvent.type ]( popcornId, options );
+          metrics.increment( "popcorn.plugin." + trackEvent.type );
         }
 
         popcornEvent = _popcorn.getTrackEvent( popcornId );
@@ -132,11 +135,11 @@ define( [
         // make sure the plugin is still included
         if ( _popcorn[ trackEvent.type ] ) {
           if ( trackEvent.type === "sequencer" ) {
-            waitForPopcorn( createTrackEvent, function() {
+            waitForPopcorn( synchronizeTrackEvent, function() {
               throw "Your media seems to be taking a long time to load. Review your media URL(s) or continue waiting.";
             }, findMediaType( trackEvent.popcornOptions.source ) );
           } else {
-            createTrackEvent();
+            synchronizeTrackEvent();
           }
         }
       }
@@ -168,11 +171,13 @@ define( [
       // called when timeout occurs preparing popcorn
       function popcornTimeoutWrapper( e ) {
         _interruptLoad = true;
+        metrics.increment( "timeout.popcorn" );
         _onTimeout( e );
       }
 
       // called when timeout occurs preparing media
       function mediaTimeoutWrapper( e ) {
+        metrics.increment( "timeout.media" );
         _onTimeout( e );
       }
 

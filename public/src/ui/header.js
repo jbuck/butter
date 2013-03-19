@@ -1,5 +1,6 @@
-define([ "dialog/dialog", "util/lang", "text!layouts/header.html", "ui/user-data", "ui/webmakernav/webmakernav", "ui/widget/tooltip" ],
-  function( Dialog, Lang, HEADER_TEMPLATE, UserData, WebmakerBar, ToolTip ) {
+define([ "dialog/dialog", "util/lang", "text!layouts/header.html", "ui/user-data",
+         "ui/webmakernav/webmakernav", "ui/widget/tooltip", "core/metrics" ],
+  function( Dialog, Lang, HEADER_TEMPLATE, UserData, WebmakerBar, ToolTip, metrics ) {
 
   return function( butter, options ){
 
@@ -144,6 +145,7 @@ define([ "dialog/dialog", "util/lang", "text!layouts/header.html", "ui/user-data
         });
         dialog.open();
       }
+      metrics.increment( "ui.header.clearEvents" );
     }
 
     this.views = {

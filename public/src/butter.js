@@ -62,7 +62,7 @@ window.Butter = {
             "dialog/dialog", "editor/editor", "ui/ui",
             "util/xhr", "util/lang", "util/tutorial",
             "util/warn", "text!default-config.json",
-            "ui/widget/tooltip", "crashreporter", "core/project",
+            "ui/widget/tooltip", "crashreporter", "core/project", "core/metrics",
             "../external/ua-parser/ua-parser"
           ],
           function(
@@ -72,7 +72,7 @@ window.Butter = {
             Dialog, Editor, UI,
             xhr, Lang, Tutorial,
             Warn, DEFAULT_CONFIG_JSON,
-            ToolTip, CrashReporter, Project,
+            ToolTip, CrashReporter, Project, Metrics,
             UAParser
           ){
 
@@ -952,6 +952,8 @@ window.Butter = {
       else {
         readConfig( Config.reincarnate( butterOptions.config ) );
       } //if
+
+      metrics.init( _this, _config.value( "metrics" ) );
 
       // Attach the instance to Butter so we can debug
       Butter.app = _this;
