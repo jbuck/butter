@@ -317,7 +317,7 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer" ],
         return;
       }
 
-      var projectJSON = {
+      var projectData = {
         id: _id,
         name: _name,
         template: _template,

@@ -33,7 +33,7 @@ define( [ "util/xhr" ], function( xhr ) {
             callback( response );
           });
         } else {
-          callback( undefined );
+          callback();
         }
       });
     };
