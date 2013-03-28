@@ -12,10 +12,6 @@
  *
  *   metrics.{method}( statName, optionalStatValue );
  *
- * NOTE: the module has to be initialized once before use:
- *
- *   metrics.init( butter );
- *
  * Metric names should be namespaced, for example: `project.save`,
  * `project.delete`, `error.loading`, etc. The value is optional
  * and 1 will be assumed if not given.
@@ -39,10 +35,10 @@
  *   set, unique - counts unique occurences of a stat (e.g., set
  *   "key" to "foo".
  */
-define( [], function() {
+define([ "util/xhr" ], function( xhr ) {
 
   // Add all statsd metrics methods.
-  function addMetricsMethods( metrics, cornfield, queue ) {
+  function addMetricsMethods( metrics, queue ) {
     var methods = "timing increment decrement gauge set unique".split( " " ),
         onceCache = {};
 
@@ -98,48 +94,39 @@ define( [], function() {
     };
   }
 
-  function init( butter, config, o ) {
-    if ( init.done ) {
+  var queue = [],
+      statsDisabled = false,
+      sendInterval = 20000,
+      sendOnUnload = true;
+
+  addMetricsMethods( this, queue );
+
+  // Send a batch of stats to the server
+  function flushQueue() {
+    if ( !queue.length || statsDisabled ) {
       return;
     }
 
-    var cornfield = butter.cornfield,
-        queue = [],
-        sendInterval = +config.sendInterval,
-        sendOnUnload = config.sendOnUnload;
-
-    init.done = true;
-    addMetricsMethods( o, cornfield, queue );
-
-    // Send a batch of stats to the server
-    function flushQueue() {
-      if ( queue.length === 0 ) {
-        return;
+    xhr.post( "/api/metrics", queue, function( response ) {
+      if ( response.error === "disabled" ) {
+        statsDisabled = true;
       }
-
-      cornfield.metrics( queue );
-      queue.length = 0;
-    }
-
-    // We send stats to the server every N minutes
-    if ( sendInterval > 0 ) {
-      window.setInterval( function() {
-        flushQueue();
-      }, sendInterval );
-    }
-
-    // ...and also when the window closes
-    if ( sendOnUnload ) {
-      window.addEventListener( "unload", flushQueue, false );
-      window.addEventListener( "beforeunload", flushQueue, false );
-    }
+    });
+    queue.length = 0;
   }
 
-  // We return a partially built metrics object, init will finish the job.
-  return {
-    init: function( butter, config ) {
-      init( butter, config, this );
-    }
-  };
+  // We send stats to the server every N milliseconds
+  if ( sendInterval > 0 ) {
+    window.setInterval( function() {
+      flushQueue();
+    }, sendInterval );
+  }
 
+  // ...and also when the window closes
+  if ( sendOnUnload ) {
+    window.addEventListener( "unload", flushQueue, false );
+    window.addEventListener( "beforeunload", flushQueue, false );
+  }
+
+  return this;
 });
