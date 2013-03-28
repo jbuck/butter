@@ -317,14 +317,14 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer" ],
         return;
       }
 
-      var projectJSON = JSON.stringify({
+      var projectJSON = {
         id: _id,
         name: _name,
         template: _template,
         author: _author,
         data: _this.data,
         remixedFrom: _remixedFrom
-      });
+      };
 
       // Save to local storage first in case network is down.
       backupData();
