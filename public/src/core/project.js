@@ -330,7 +330,7 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer" ],
       backupData();
 
       // Save to db, then publish
-      butter.cornfield.save( _id, projectJSON, function( e ) {
+      butter.cornfield.save( _id, projectData, function( e ) {
         if ( e.error === "okay" ) {
           // Since we've now fully saved, blow away autosave backup
           _isDirty = false;
